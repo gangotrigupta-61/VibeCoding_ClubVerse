@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClubHub - Centralized Club Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        :root {
+            --primary: #6C63FF;
+            --secondary: #4A44C6;
+            --accent: #FF6584;
+            --light: #F5F5F7;
+            --dark: #2D2B55;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--dark);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Opening Page Styles */
+        #opening-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1.5s ease, visibility 1.5s ease;
+        }
+
+        #opening-page.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        #background-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        .tagline-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            color: white;
+            padding: 0 20px;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tagline {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .sub-tagline {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .enter-btn {
+            background-color: white;
+            color: var(--primary);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .enter-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Main App Styles */
+        #main-app {
+            display: none;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        #main-app.fade-in {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo i {
+            margin-right: 10px;
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin: 0 15px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+            border-radius: 3px;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-actions button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 15px;
+        }
+
+        .user-actions button:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        /* Dashboard Styles */
+        .dashboard {
+            padding: 40px 5%;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: white;
+            position: relative;
+            display: inline-block;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background-color: white;
+            border-radius: 2px;
+        }
+
+        /* Events Section */
+        .events-section {
+            margin-bottom: 60px;
+        }
+
+        .event-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .event-tab {
+            padding: 10px 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            color: white;
+        }
+
+        .event-tab.active {
+            color: white;
+            border-bottom: 3px solid white;
+        }
+
+        .events-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .event-card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            transition: all 0.4s ease;
+            transform-style: preserve-3d;
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+
+        .event-card:hover {
+            transform: translateY(-10px) rotateX(5deg);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .event-image {
+            height: 180px;
+            width: 100%;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .event-content {
+            padding: 20px;
+        }
+
+        .event-date {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        .event-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .event-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .event-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .event-actions button {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .event-actions button:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Explore Clubs Section */
+        .explore-clubs-section {
+            margin-bottom: 60px;
+        }
+
+        .clubs-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .club-card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            transition: all 0.4s ease;
+            transform-style: preserve-3d;
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+
+        .club-card:hover {
+            transform: translateY(-10px) rotateY(5deg);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .club-logo {
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-size: 2.5rem;
+        }
+
+        .club-content {
+            padding: 20px;
+        }
+
+        .club-name {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .club-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .club-members {
+            display: flex;
+            align-items: center;
+            color: #777;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .club-members i {
+            margin-right: 5px;
+        }
+
+        .club-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .club-actions button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .club-actions button:hover {
+            background-color: var(--secondary);
+        }
+
+        /* Footer Styles */
+        footer {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 50px 5% 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background-color: var(--primary);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column ul li a {
+            color: #bbb;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column ul li a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            .nav-links {
+                margin: 20px 0;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .nav-links li {
+                margin: 5px 10px;
+            }
+
+            .tagline {
+                font-size: 2.5rem;
+            }
+
+            .sub-tagline {
+                font-size: 1.2rem;
+            }
+
+            .events-container, .clubs-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Opening Page -->
+    <div id="opening-page">
+        <video id="background-video" autoplay muted loop>
+            <source src="club.mp4" type="video/mp4">
+        </video>
+        <div class="tagline-container">
+            <h1 class="tagline">Unite. Organize. Thrive.</h1>
+            <p class="sub-tagline">The pulse that connects every campus club</p>
+            <button class="enter-btn" id="enter-btn">CLUBVERSE</button>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="main-app">
+        <!-- Header -->
+        <header>
+            <div class="navbar">
+                <div class="logo">
+                    <i class="fas fa-users"></i>
+                    <span>CLUBVERSE</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#" class="active">Dashboard</a></li>
+                    <li><a href="#">My Clubs</a></li>
+                    <li><a href="#">Events</a></li>
+                    
+                   
+                    <li><a href="#">Announcements</a></li>
+                </ul>
+                <div class="user-actions">
+                    <button><i class="fas fa-bell"></i></button>
+                    <button><i class="fas fa-user"></i> Profile</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard -->
+        <div class="dashboard">
+            <!-- Events Section -->
+            <section class="events-section">
+                <h2 class="section-title">Club Events</h2>
+                <div class="event-tabs">
+                    <div class="event-tab active" data-tab="upcoming">Upcoming Events</div>
+                    <div class="event-tab" data-tab="past">Past Events</div>
+                </div>
+                <div class="events-container" id="events-container">
+                    <!-- Events will be loaded here by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Explore Clubs Section -->
+            <section class="explore-clubs-section">
+                <h2 class="section-title">Explore Clubs</h2>
+                <div class="clubs-container" id="clubs-container">
+                    <!-- Clubs will be loaded here by JavaScript -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>CLUBVERSE</h3>
+                    <p>The centralized platform for all your club management needs. Streamline communication, planning, and coordination in one place.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Features</a></li>
+                        <li><a href="#">Pricing</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Features</h3>
+                    <ul>
+                        <li><a href="#">Member Management</a></li>
+                        <li><a href="#">Event Planning</a></li>
+                        <li><a href="#">Attendance Tracking</a></li>
+                        <li><a href="#">Document Storage</a></li>
+                        <li><a href="#">Announcements</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Us</h3>
+                    <ul>
+                        <li><i class="fas fa-envelope"></i> support@clubhub.com</li>
+                        <li><i class="fas fa-phone"></i> +1 (555) 123-4567</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 123 University Ave, Campus Town</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 ClubHub. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Sample data for events and clubs
+        const eventsData = {
+            upcoming: [
+                {
+                    id: 1,
+                    title: "Tech Talk: Future of AI",
+                    date: "Oct 15, 2023",
+                    description: "Join us for an exciting discussion on the future of artificial intelligence with industry experts.",
+                    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                    club: "Tech Club"
+                },
+                {
+                    id: 2,
+                    title: "Photography Workshop",
+                    date: "Oct 20, 2023",
+                    description: "Learn the basics of photography and improve your skills with hands-on activities.",
+                    image: "https://images.unsplash.com/photo-1554048612-b6a482bc67e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                    club: "Photography Club"
+                },
+                {
+                    id: 3,
+                    title: "Debate Competition Finals",
+                    date: "Oct 25, 2023",
+                    description: "Witness the final round of our annual debate competition with talented speakers.",
+                    image: "https://images.unsplash.com/photo-1580519542036-c47de6196ba5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                    club: "Debate Club"
+                }
+            ],
+            past: [
+                {
+                    id: 4,
+                    title: "Charity Run 2023",
+                    date: "Sep 10, 2023",
+                    description: "Annual charity run event that raised funds for local community projects.",
+                    image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                    club: "Sports Club"
+                },
+                {
+                    id: 5,
+                    title: "Art Exhibition Opening",
+                    date: "Aug 22, 2023",
+                    description: "Showcasing the incredible artwork created by our talented student artists.",
+                    image: "https://images.unsplash.com/photo-1563089145-599997674d42?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                    club: "Art Club"
+                },
+                {
+                    id: 6,
+                    title: "Music Festival",
+                    date: "Jul 15, 2023",
+                    description: "A day filled with live performances from our campus bands and solo artists.",
+                    image: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                    club: "Music Club"
+                }
+            ]
+        };
+
+        const clubsData = [
+            {
+                id: 1,
+                name: "Tech Club",
+                description: "Exploring the latest in technology, coding, and innovation. Join us for workshops, hackathons, and tech talks.",
+                members: 145,
+                icon: "fas fa-laptop-code"
+            },
+            {
+                id: 2,
+                name: "Photography Club",
+                description: "Capture moments, learn techniques, and share your passion for photography with fellow enthusiasts.",
+                members: 89,
+                icon: "fas fa-camera"
+            },
+            {
+                id: 3,
+                name: "Debate Club",
+                description: "Sharpen your public speaking and critical thinking skills through engaging debates and discussions.",
+                members: 67,
+                icon: "fas fa-comments"
+            },
+            {
+                id: 4,
+                name: "Sports Club",
+                description: "Promoting fitness and teamwork through various sports activities and competitive events.",
+                members: 203,
+                icon: "fas fa-running"
+            },
+            {
+                id: 5,
+                name: "Art Club",
+                description: "Express your creativity through various art forms including painting, sketching, and digital art.",
+                members: 112,
+                icon: "fas fa-palette"
+            },
+            {
+                id: 6,
+                name: "Music Club",
+                description: "Bringing together musicians and music lovers for jam sessions, performances, and collaborations.",
+                members: 98,
+                icon: "fas fa-music"
+            },
+            {
+                id: 7,
+                name: "Science Club",
+                description: "Exploring scientific concepts through experiments, discussions, and field trips.",
+                members: 76,
+                icon: "fas fa-flask"
+            },
+            {
+                id: 8,
+                name: "Literature Club",
+                description: "Discussing books, writing workshops, and literary events for all book lovers.",
+                members: 54,
+                icon: "fas fa-book"
+            }
+        ];
+
+        // DOM Elements
+        const openingPage = document.getElementById('opening-page');
+        const mainApp = document.getElementById('main-app');
+        const enterBtn = document.getElementById('enter-btn');
+        const eventsContainer = document.getElementById('events-container');
+        const clubsContainer = document.getElementById('clubs-container');
+        const eventTabs = document.querySelectorAll('.event-tab');
+
+        // Initialize the app
+        function initApp() {
+            // Load upcoming events by default
+            loadEvents('upcoming');
+            
+            // Load clubs
+            loadClubs();
+            
+            // Add event listeners
+            enterBtn.addEventListener('click', enterApp);
+            eventTabs.forEach(tab => {
+                tab.addEventListener('click', switchEventTab);
+            });
+        }
+
+        // Enter the main application
+        function enterApp() {
+            // Add background music (would need to be hosted)
+            // const bgMusic = new Audio('background-music.mp3');
+            // bgMusic.loop = true;
+            // bgMusic.volume = 0.3;
+            // bgMusic.play();
+            
+            // Fade out opening page
+            openingPage.classList.add('fade-out');
+            
+            // Show main app after delay
+            setTimeout(() => {
+                mainApp.classList.add('fade-in');
+            }, 1500);
+        }
+
+        // Switch between event tabs
+        function switchEventTab(e) {
+            const tab = e.target;
+            const tabType = tab.getAttribute('data-tab');
+            
+            // Update active tab
+            eventTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Load events for selected tab
+            loadEvents(tabType);
+        }
+
+        // Load events based on type (upcoming/past)
+        function loadEvents(type) {
+            eventsContainer.innerHTML = '';
+            
+            eventsData[type].forEach(event => {
+                const eventCard = document.createElement('div');
+                eventCard.className = 'event-card';
+                eventCard.innerHTML = `
+                    <div class="event-image" style="background-image: url('${event.image}')"></div>
+                    <div class="event-content">
+                        <span class="event-date">${event.date}</span>
+                        <h3 class="event-title">${event.title}</h3>
+                        <p class="event-description">${event.description}</p>
+                        <div class="event-actions">
+                            <button><i class="fas fa-info-circle"></i> Details</button>
+                            <button><i class="fas fa-calendar-plus"></i> RSVP</button>
+                        </div>
+                    </div>
+                `;
+                eventsContainer.appendChild(eventCard);
+            });
+        }
+
+        // Load all clubs
+        function loadClubs() {
+            clubsContainer.innerHTML = '';
+            
+            clubsData.forEach(club => {
+                const clubCard = document.createElement('div');
+                clubCard.className = 'club-card';
+                clubCard.innerHTML = `
+                    <div class="club-logo">
+                        <i class="${club.icon}"></i>
+                    </div>
+                    <div class="club-content">
+                        <h3 class="club-name">${club.name}</h3>
+                        <p class="club-description">${club.description}</p>
+                        <div class="club-members">
+                            <i class="fas fa-users"></i> ${club.members} Members
+                        </div>
+                        <div class="club-actions">
+                            <button><i class="fas fa-eye"></i> View Club</button>
+                            <button><i class="fas fa-plus"></i> Join</button>
+                        </div>
+                    </div>
+                `;
+                clubsContainer.appendChild(clubCard);
+            });
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
